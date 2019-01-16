@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 import rospy
+from std_msgs.msg import Int32
 from geometry_msgs.msg import PoseStamped
 from styx_msgs.msg import Lane, Waypoint
 
@@ -42,7 +43,7 @@ class WaypointUpdater(object):
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
         rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
 
-        # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
+        # DONE: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
 
         self.loop()
@@ -50,19 +51,15 @@ class WaypointUpdater(object):
     def loop(self):
         rate = rospy.Rate(50)
         while not rospy.is_shutdown():
-            if self.pose and self.base_waypoints:
+            if self.pose and self.base_lane:
                 # Get closest waypoint
-                closest_waypoint_idx = self.get_closest_waypoint_idx()
-                self.publish_waypoints(closest_waypoint_idx)
+                self.publish_waypoints()
             rate.sleep()
 
     def get_closest_waypoint_idx(self):
         x = self.pose.pose.position.x
         y = self.pose.pose.position.y
 	
-	if not self.waypoint_tree: 
-	    return 0
-
         closest_idx = self.waypoint_tree.query([x,y],1)[1]
 
         #check closest is ahead or behind vehicle
@@ -83,7 +80,7 @@ class WaypointUpdater(object):
 
     def publish_waypoints(self):
         final_lane = self.generate_lane()
-        self.final_waypoints_pub.publish(lafinal_lanene)
+        self.final_waypoints_pub.publish(final_lane)
 
     def generate_lane(self):
         lane = Lane()
@@ -101,7 +98,7 @@ class WaypointUpdater(object):
 
     def decelerate_waypoints(self, waypoints, closest_idx):
         temp = []
-        for i, wp inm enumerate(waypoints):
+        for i, wp in enumerate(waypoints):
 
             p = Waypoint()
             p.pose = wp.pose
@@ -123,11 +120,11 @@ class WaypointUpdater(object):
         # DONE: Implement
         self.pose = msg
 
-    def waypoints_cb(self, waypoints):
+    def waypoints_cb(self, lane):
         # DONE: Implement
-        self.base_waypoints = waypoints
+        self.base_lane = lane 
         if not self.waypoints_2d:
-            self.waypoints_2d = [[ waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
+            self.waypoints_2d = [[ waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in lane.waypoints]
             self.waypoint_tree = KDTree(self.waypoints_2d)
 
     def traffic_cb(self, msg):
