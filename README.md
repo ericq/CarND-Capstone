@@ -29,23 +29,28 @@ docker build . -t capstone
 
 Run the docker file
 ```bash
-docker run -p 4567:4567 -v $PWD:/capstone -v /tmp/log:/root/.ros/ --rm -it capstone
+docker run -p 4567:4567 -v $PWD:/capstone -v /tmp/log:/root/.ros/ --name my_capstone --rm -it capstone
 ```
 
-### Port Forwarding
-To set up port forwarding, please refer to the [instructions from term 2](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/0949fca6-b379-42af-a919-ee50aa304e6a/lessons/f758c44c-5e40-4e01-93b5-1a82aa4e044f/concepts/16cf4a78-4fc7-49e1-8621-3450ca938b77)
+Open additional temrinal to access the docker container.
+```bash
+docker exec -it my_capstone bash
+```
 
 ### Usage
 
 1. Clone the project repository
 ```bash
-git clone https://github.com/udacity/CarND-Capstone.git
+cd ~  # create project in the user home directory
+git clone https://github.com/ericq/CarND-Capstone.git
 ```
 
 2. Install python dependencies
 ```bash
+apt-get install vim
 cd CarND-Capstone
 pip install -r requirements.txt
+pip install pillow --upgrade
 ```
 3. Make and run styx
 ```bash
