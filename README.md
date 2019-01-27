@@ -20,6 +20,13 @@ Please use **one** of the two installation options, either native **or** docker 
 * Download the [Udacity Simulator](https://github.com/udacity/CarND-Capstone/releases).
 
 ### Docker Installation
+
+Clone this project repository assuming you're on Mac or Linux developerment environment
+# go to places where you want to place your project folder
+```
+git clone https://github.com/ericq/CarND-Capstone.git
+```
+
 [Install Docker](https://docs.docker.com/engine/installation/)
 
 Build the docker container
@@ -27,7 +34,9 @@ Build the docker container
 docker build . -t capstone
 ```
 
-Run the docker file
+Run the docker file.
+Note that this will start the docker container and mount host $PWD (project folder) directory to the 
+docker container as '/capstone' directory; the same for log file direcotry. 
 ```bash
 docker run -p 4567:4567 -v $PWD:/capstone -v /tmp/log:/root/.ros/ --name my_capstone --rm -it capstone
 ```
@@ -38,11 +47,9 @@ docker exec -it my_capstone bash
 ```
 
 ### Usage
-
-1. Clone the project repository
+1. Go to the project folder
 ```bash
-cd ~  # create project in the user home directory
-git clone https://github.com/ericq/CarND-Capstone.git
+cd /capstone
 ```
 
 2. Install python dependencies
