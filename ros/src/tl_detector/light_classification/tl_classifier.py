@@ -2,6 +2,7 @@ from styx_msgs.msg import TrafficLight
 import rospy
 
 import os
+import sys
 from os import path
 import six.moves.urllib as urllib
 import tarfile
@@ -91,6 +92,7 @@ class TLClassifier(object):
     def __init__(self):
         # DONE - initiate the Tensorflow object dection API
 
+        rospy.logwarn("Python ver = "+sys.version)
         rospy.logwarn("Tensorflow MUST be 1.4.0+, ver = " + tf.__version__)
 
         # MODEL Reference
