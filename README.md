@@ -57,7 +57,11 @@ cd /capstone
 apt-get install vim
 cd CarND-Capstone
 pip install -r requirements.txt
+
+# for some reason the pillow and tensorflow not installed per the specified version
+# update it
 pip install pillow --upgrade
+pip install tensorflow --upgrade
 ```
 3. Make and run styx
 ```bash

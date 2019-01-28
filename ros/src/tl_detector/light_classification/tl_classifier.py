@@ -91,8 +91,11 @@ class TLClassifier(object):
     def __init__(self):
         # DONE - initiate the Tensorflow object dection API
 
+        rospy.logwarn("Tensorflow version = " + tf.__version__)
+
         # MODEL Reference
-        MODEL_NAME = 'faster_rcnn_resnet101_coco_11_06_2017'
+        # backup - 'faster_rcnn_resnet101_coco_11_06_2017'
+        MODEL_NAME = 'ssd_mobilenet_v1_coco_2018_01_28'
         MODEL_FILE = MODEL_NAME + '.tar.gz'
         DOWNLOAD_BASE = 'http://download.tensorflow.org/models/object_detection/'
 
@@ -175,6 +178,22 @@ class TLClassifier(object):
                 rospy.logwarn("after transaction: " +
                               str(time.time() - start_time))
 
+                (boxes, scores, classes, num) = sess.run(
+                    [detection_boxes, detection_scores,
+                        detection_classes, num_detections],
+                    feed_dict={image_tensor: image_np_expanded})
+
+                rospy.logwarn("repeat the transaction: " +
+                              str(time.time() - start_time))
+
+                (boxes, scores, classes, num) = sess.run(
+                    [detection_boxes, detection_scores,
+                        detection_classes, num_detections],
+                    feed_dict={image_tensor: image_np_expanded})
+
+                rospy.logwarn("repeat2 the transaction: " +
+                              str(time.time() - start_time))
+
                 red_flag = read_traffic_lights(pil_im, np.squeeze(boxes), np.squeeze(
                     scores), np.squeeze(classes).astype(np.int32))
                 if red_flag:
@@ -182,7 +201,7 @@ class TLClassifier(object):
                     rospy.logwarn("Done: " +
                                   str(time.time() - start_time))
                     return TrafficLight.RED
-        #rospy.logwarn("cannot detect RED")
+        rospy.logwarn("cannot detect RED")
         rospy.logwarn("Done: " +
                       str(time.time() - start_time))
         return TrafficLight.UNKNOWN
