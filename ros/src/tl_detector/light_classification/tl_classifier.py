@@ -91,7 +91,7 @@ class TLClassifier(object):
     def __init__(self):
         # DONE - initiate the Tensorflow object dection API
 
-        rospy.logwarn("Tensorflow version = " + tf.__version__)
+        rospy.logwarn("Tensorflow MUST be 1.4.0+, ver = " + tf.__version__)
 
         # MODEL Reference
         # backup - 'faster_rcnn_resnet101_coco_11_06_2017'
@@ -120,6 +120,36 @@ class TLClassifier(object):
                 od_graph_def.ParseFromString(serialized_graph)
                 tf.import_graph_def(od_graph_def, name='')
 
+        # ---- init sess
+        self.detection_graph.as_default()
+        self.sess = tf.Session(graph=self.detection_graph)
+
+        # Definite input and output Tensors for detection_graph
+        self.image_tensor = self.detection_graph.get_tensor_by_name(
+            'image_tensor:0')
+        # Each box represents a part of the image where a particular object was detected.
+        self.detection_boxes = self.detection_graph.get_tensor_by_name(
+            'detection_boxes:0')
+        # Each score represent how level of confidence for each of the objects.
+        # Score is shown on the result image, together with the class label.
+        self.detection_scores = self.detection_graph.get_tensor_by_name(
+            'detection_scores:0')
+        self.detection_classes = self.detection_graph.get_tensor_by_name(
+            'detection_classes:0')
+        self.num_detections = self.detection_graph.get_tensor_by_name(
+            'num_detections:0')
+
+        # Do one run to warm up... so it won't spend time during driving time
+        # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
+        pil_im = Image.open('redlight.bmp')
+        image_np = load_image_into_numpy_array(pil_im)
+        image_np_expanded = np.expand_dims(image_np, axis=0)
+        # Actual detection.
+        (_, _, _, _) = self.sess.run(
+            [self.detection_boxes, self.detection_scores,
+                self.detection_classes, self.num_detections],
+            feed_dict={self.image_tensor: image_np_expanded})
+
     def get_classification(self, image):
         """Determines the color of the traffic light in the image
 
@@ -131,76 +161,32 @@ class TLClassifier(object):
 
         """
         # TODO implement light color prediction
-        #rospy.logwarn("img received.")
-
         start_time = time.time()
 
         # Input image is cv2 mat format, convert it to PIL image
         cv2_im = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         pil_im = Image.fromarray(cv2_im)
 
-        detection_graph = self.detection_graph
+        # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
+        image_np = load_image_into_numpy_array(pil_im)
+        image_np_expanded = np.expand_dims(image_np, axis=0)
+        # Actual detection.
+        (boxes, scores, classes, _) = self.sess.run(
+            [self.detection_boxes, self.detection_scores,
+                self.detection_classes, self.num_detections],
+            feed_dict={self.image_tensor: image_np_expanded})
 
-        # use tensorflow object detection API to detect the camera.
-        with detection_graph.as_default():
-            with tf.Session(graph=detection_graph) as sess:
+        rospy.logwarn("after transaction: " +
+                      str(time.time() - start_time))
 
-                rospy.logwarn("session initialized: " +
-                              str(time.time() - start_time))
+        red_flag = read_traffic_lights(pil_im, np.squeeze(boxes), np.squeeze(
+            scores), np.squeeze(classes).astype(np.int32))
+        if red_flag:
+            rospy.logwarn("RED detected")
+            rospy.logwarn("Done: " +
+                          str(time.time() - start_time))
+            return TrafficLight.RED
 
-                # Definite input and output Tensors for detection_graph
-                image_tensor = detection_graph.get_tensor_by_name(
-                    'image_tensor:0')
-                # Each box represents a part of the image where a particular object was detected.
-                detection_boxes = detection_graph.get_tensor_by_name(
-                    'detection_boxes:0')
-                # Each score represent how level of confidence for each of the objects.
-                # Score is shown on the result image, together with the class label.
-                detection_scores = detection_graph.get_tensor_by_name(
-                    'detection_scores:0')
-                detection_classes = detection_graph.get_tensor_by_name(
-                    'detection_classes:0')
-                num_detections = detection_graph.get_tensor_by_name(
-                    'num_detections:0')
-
-                rospy.logwarn("before transaction: " +
-                              str(time.time() - start_time))
-
-                # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
-                image_np = load_image_into_numpy_array(pil_im)
-                image_np_expanded = np.expand_dims(image_np, axis=0)
-                # Actual detection.
-                (boxes, scores, classes, num) = sess.run(
-                    [detection_boxes, detection_scores,
-                        detection_classes, num_detections],
-                    feed_dict={image_tensor: image_np_expanded})
-
-                rospy.logwarn("after transaction: " +
-                              str(time.time() - start_time))
-
-                (boxes, scores, classes, num) = sess.run(
-                    [detection_boxes, detection_scores,
-                        detection_classes, num_detections],
-                    feed_dict={image_tensor: image_np_expanded})
-
-                rospy.logwarn("repeat the transaction: " +
-                              str(time.time() - start_time))
-
-                (boxes, scores, classes, num) = sess.run(
-                    [detection_boxes, detection_scores,
-                        detection_classes, num_detections],
-                    feed_dict={image_tensor: image_np_expanded})
-
-                rospy.logwarn("repeat2 the transaction: " +
-                              str(time.time() - start_time))
-
-                red_flag = read_traffic_lights(pil_im, np.squeeze(boxes), np.squeeze(
-                    scores), np.squeeze(classes).astype(np.int32))
-                if red_flag:
-                    rospy.logwarn("RED detected")
-                    rospy.logwarn("Done: " +
-                                  str(time.time() - start_time))
-                    return TrafficLight.RED
         rospy.logwarn("cannot detect RED")
         rospy.logwarn("Done: " +
                       str(time.time() - start_time))
