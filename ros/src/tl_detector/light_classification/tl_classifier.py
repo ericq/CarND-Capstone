@@ -58,14 +58,7 @@ def detect_red(img, Threshold=0.01):
         return False
 
 
-def load_image_into_numpy_array(image):
-    (im_width, im_height) = image.size
-    return np.array(image.getdata()).reshape(
-        (im_height, im_width, 3)).astype(np.uint8)
-
 # input is a PIL Image
-
-
 def read_traffic_lights(image, boxes, scores, classes, max_boxes_to_draw=20, min_score_thresh=0.5, traffic_ligth_label=10):
     im_width, im_height = image.size
 
@@ -143,8 +136,7 @@ class TLClassifier(object):
 
         # Do one run to warm up... so it won't spend time during driving time
         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
-        pil_im = Image.open('redlight.bmp')
-        image_np = load_image_into_numpy_array(pil_im)
+        image_np = cv2.imread('redlight.bmp', cv2.COLOR_BGR2RGB)
         image_np_expanded = np.expand_dims(image_np, axis=0)
         # Actual detection.
         (_, _, _, _) = self.sess.run(
@@ -166,11 +158,10 @@ class TLClassifier(object):
         start_time = time.time()
 
         # Input image is cv2 mat format, convert it to PIL image
-        cv2_im = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        pil_im = Image.fromarray(cv2_im)
+        image_np = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        pil_im = Image.fromarray(image_np)
 
         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
-        image_np = load_image_into_numpy_array(pil_im)
         image_np_expanded = np.expand_dims(image_np, axis=0)
         # Actual detection.
         (boxes, scores, classes, _) = self.sess.run(
@@ -178,18 +169,13 @@ class TLClassifier(object):
                 self.detection_classes, self.num_detections],
             feed_dict={self.image_tensor: image_np_expanded})
 
-        rospy.logwarn("after transaction: " +
-                      str(time.time() - start_time))
-
         red_flag = read_traffic_lights(pil_im, np.squeeze(boxes), np.squeeze(
             scores), np.squeeze(classes).astype(np.int32))
         if red_flag:
-            rospy.logwarn("RED detected")
-            rospy.logwarn("Done: " +
+            rospy.logwarn("RED: " +
                           str(time.time() - start_time))
             return TrafficLight.RED
 
-        rospy.logwarn("cannot detect RED")
-        rospy.logwarn("Done: " +
+        rospy.logwarn("No red found: " +
                       str(time.time() - start_time))
         return TrafficLight.UNKNOWN
