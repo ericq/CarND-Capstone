@@ -53,7 +53,8 @@ class TLDetector(object):
         '''
         sub3 = rospy.Subscriber('/vehicle/traffic_lights',
                                 TrafficLightArray, self.traffic_cb)
-        sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
+        sub6 = rospy.Subscriber('/image_color', Image,
+                                self.image_cb, queue_size=1)
 
         rospy.spin()
 
@@ -174,7 +175,7 @@ class TLDetector(object):
                     closest_light = light
                     line_wp_idx = temp_wp_idx
 
-        if closest_light:
+        if closest_light and diff < 50:
             state = self.get_light_state(closest_light)
             return line_wp_idx, state
 
