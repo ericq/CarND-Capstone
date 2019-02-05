@@ -19,6 +19,10 @@ Please use **one** of the two installation options, either native **or** docker 
   * Use this option to install the SDK on a workstation that already has ROS installed: [One Line SDK Install (binary)](https://bitbucket.org/DataspeedInc/dbw_mkz_ros/src/81e63fcc335d7b64139d7482017d6a97b405e250/ROS_SETUP.md?fileviewer=file-view-default)
 * Download the [Udacity Simulator](https://github.com/udacity/CarND-Capstone/releases).
 
+* Speical note about Tensorflow-Gpu
+  * this program is ok to use Tensorflow-cpu. the inference speed is good enough (<90ms) in a CPU mode. In case you want to use Tensorflow-GPU, please make sure the version is latest Tensorflow-GPU as per the requirement.txt. And the CUDA 9.0 and CUDNN 7.4.24 (supported version for Ubuntu 16.04)
+  * to simplify your setup and validation process, simply use the Docker Installation below, which is the main way the app is developed and tested.
+
 ### Docker Installation
 
 Clone this project repository assuming you're on Mac or Linux developerment environment
